@@ -4,10 +4,9 @@
 
 **Scan a folder and instantly total your video footage duration.**
 
-![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)
-![tkinter](https://img.shields.io/badge/tkinter-GUI-blue?style=for-the-badge)
-![FFmpeg](https://img.shields.io/badge/FFmpeg-007808?style=for-the-badge&logo=ffmpeg&logoColor=white)
+![Swift](https://img.shields.io/badge/Swift-5.9+-F05138?style=for-the-badge&logo=swift&logoColor=white)
+![macOS](https://img.shields.io/badge/macOS_14+-000000?style=for-the-badge&logo=apple&logoColor=white)
+![SwiftUI](https://img.shields.io/badge/SwiftUI-007AFF?style=for-the-badge&logo=swift&logoColor=white)
 
 [Features](#-features) · [Getting Started](#-getting-started) · [How It Works](#-how-it-works) · [File Categories](#-file-categories) · [License](#-license)
 
@@ -17,13 +16,14 @@
 
 ## ✨ Features
 
-- **Instant Duration Totals** — Point at any folder and get the total runtime of all video files in seconds
+- **Instant Duration Totals** — Drop any folder and get the total runtime of all video and audio files
+- **Drag & Drop** — Drop folders or files directly onto the window, or use the Browse button
 - **Recursive Scanning** — Toggle subfolder scanning to total an entire project or just one directory
 - **Multi-Format Support** — Recognizes 20+ video formats including .mp4, .mov, .mkv, .r3d, .braw, .mxf, and more
-- **Audio & Image Counts** — Optionally shows audio file durations and image/other file counts alongside video totals
-- **Responsive UI** — Scanning runs in a background thread so the app never freezes, with live progress updates
-- **Zero Python Dependencies** — Uses only tkinter (built-in) and ffprobe (FFmpeg CLI)
-- **Native macOS Feel** — Clean, minimal interface that stays out of your way
+- **Category Breakdown** — Color-coded cards for Video, Audio, Images, and Other files with counts and durations
+- **No External Dependencies** — Uses AVFoundation for duration detection (no ffprobe/FFmpeg required)
+- **Native macOS App** — Built with SwiftUI for a modern, native look and feel
+- **Async Scanning** — Swift concurrency keeps the UI responsive with live progress updates
 
 ---
 
@@ -31,38 +31,41 @@
 
 ### Prerequisites
 
-- Python 3.9+
-- FFmpeg (for `ffprobe`)
-
-```bash
-brew install ffmpeg
-```
+- macOS 14.0 (Sonoma) or later
+- Xcode 15+
 
 ### Running
 
 ```bash
 git clone https://github.com/markksantos/FootageCalculator.git
 cd FootageCalculator
-python3 footage_calculator.py
+open FootageCalculator.xcodeproj
 ```
 
-No `pip install`, no virtual environment, no setup — just run it.
+Then hit **Run** in Xcode, or build from the command line:
+
+```bash
+xcodebuild -project FootageCalculator.xcodeproj -scheme FootageCalculator build
+```
+
+### Legacy Python Version
+
+The original Python/tkinter version is still available (requires Python 3.9+ and FFmpeg):
+
+```bash
+python3 footage_calculator.py
+```
 
 ---
 
 ## 🏗️ How It Works
 
-1. **Browse** to a folder containing video files
-2. **Click Scan** — the app walks the directory and classifies every file by extension
-3. **ffprobe** is called on each video and audio file to extract its duration
-4. **Results** are displayed with formatted totals (MM:SS or HH:MM:SS)
+1. **Drop** a folder or files onto the window (or click Browse)
+2. The app walks the directory and classifies every file by extension
+3. **AVFoundation** extracts the duration of each video and audio file natively
+4. **Results** are displayed as category cards with formatted totals (MM:SS or HH:MM:SS)
 
-Duration detection uses:
-```bash
-ffprobe -v quiet -show_entries format=duration -of csv=p=0 <file>
-```
-
-Files that ffprobe can't read are counted but marked with unknown duration.
+Files that AVFoundation can't read are counted but marked with unknown duration.
 
 ---
 

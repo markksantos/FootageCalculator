@@ -1,0 +1,6 @@
+.DS_Store
+__pycache__/
+xcuserdata/
+DerivedData/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
