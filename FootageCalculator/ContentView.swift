@@ -27,9 +27,19 @@ struct ContentView: View {
     // MARK: - Idle View
 
     private var idleView: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             Spacer()
 
+            // Logo
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .frame(width: 80, height: 80)
+                .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+
+            Text("Footage Calculator")
+                .font(.title.bold())
+
+            // Drop zone
             ZStack {
                 RoundedRectangle(cornerRadius: 16)
                     .strokeBorder(
@@ -43,7 +53,7 @@ struct ContentView: View {
 
                 VStack(spacing: 14) {
                     Image(systemName: "folder.badge.plus")
-                        .font(.system(size: 48, weight: .thin))
+                        .font(.system(size: 36, weight: .thin))
                         .foregroundStyle(.secondary)
 
                     Text("Drop a folder or files here")
@@ -56,8 +66,10 @@ struct ContentView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.large)
                 }
+                .padding(.vertical, 24)
             }
-            .padding(32)
+            .frame(maxHeight: 180)
+            .padding(.horizontal, 32)
 
             Toggle("Include subfolders", isOn: $scanner.includeSubfolders)
                 .toggleStyle(.checkbox)
