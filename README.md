@@ -2,6 +2,8 @@
 
 # 🎬 Footage Calculator
 
+<img src="app-icon.png" width="128" alt="Footage Calculator icon" />
+
 **Scan a folder and instantly total your video footage duration.**
 
 ![Swift](https://img.shields.io/badge/Swift-5.9+-F05138?style=for-the-badge&logo=swift&logoColor=white)
