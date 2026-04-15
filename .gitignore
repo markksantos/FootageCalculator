@@ -4,3 +4,9 @@ xcuserdata/
 DerivedData/
 *.xcodeproj/project.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
+
+
+# Environment
+.env
+.env.local
+.env.*.local
