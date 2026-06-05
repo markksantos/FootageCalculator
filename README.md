@@ -22,9 +22,11 @@
 - **Drag & Drop** — Drop folders or files directly onto the window, or use the Browse button
 - **Recursive Scanning** — Toggle subfolder scanning to total an entire project or just one directory
 - **Multi-Format Support** — Recognizes 20+ video formats including .mp4, .mov, .mkv, .r3d, .braw, .mxf, and more
+- **Total Duration at a Glance** — A big running total across all video + audio, plus per-category breakdowns
 - **Category Breakdown** — Color-coded cards for Video, Audio, Images, and Other files with counts and durations
+- **Copy & Export** — Copy the summary to the clipboard or save it as a `.txt` file
 - **No External Dependencies** — Uses AVFoundation for duration detection (no ffprobe/FFmpeg required)
-- **Native macOS App** — Built with SwiftUI for a modern, native look and feel
+- **Sandboxed & Native** — App Sandbox enabled with read-only access to user-selected files; built with SwiftUI
 - **Async Scanning** — Swift concurrency keeps the UI responsive with live progress updates
 
 ---
@@ -49,6 +51,18 @@ Then hit **Run** in Xcode, or build from the command line:
 ```bash
 xcodebuild -project FootageCalculator.xcodeproj -scheme FootageCalculator build
 ```
+
+### Tests
+
+```bash
+xcodebuild -project FootageCalculator.xcodeproj -scheme FootageCalculator \
+  -destination 'platform=macOS' test
+```
+
+The `FootageCalculatorTests` target covers file classification, duration
+formatting, file collection (recursive / non-recursive), and the export
+summary. CI runs the same suite on every push via
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ### Legacy Python Version
 
@@ -79,6 +93,30 @@ Files that AVFoundation can't read are counted but marked with unknown duration.
 | Audio | .mp3, .wav, .aac, .flac, .ogg, .wma, .m4a, .aiff, .aif, .opus |
 | Image | .jpg, .jpeg, .png, .gif, .bmp, .tiff, .tif, .webp, .heic, .heif, .raw, .cr2, .nef, .arw, .psd |
 | Other | Everything else (counted, not analyzed) |
+
+---
+
+## 📦 Deploying
+
+The app is sandboxed and hardened-runtime ready. To produce a distributable,
+notarized DMG you need an Apple Developer account and a **Developer ID
+Application** certificate in your login keychain.
+
+```bash
+# Sign + export + DMG (signed, not notarized):
+DEVELOPMENT_TEAM=YOURTEAMID ./scripts/build-release.sh
+
+# Same, plus notarize + staple (requires a notarytool keychain profile):
+xcrun notarytool store-credentials fc-notary \
+  --apple-id "you@example.com" --team-id YOURTEAMID --password "app-specific-pw"
+DEVELOPMENT_TEAM=YOURTEAMID NOTARY_PROFILE=fc-notary ./scripts/build-release.sh
+```
+
+The output DMG lands in `build/FootageCalculator.dmg`.
+
+For the **Mac App Store** instead of direct distribution, change `method` to
+`app-store-connect` in `scripts/ExportOptions.template.plist` and use a Mac App
+Store provisioning profile / certificate.
 
 ---
 
