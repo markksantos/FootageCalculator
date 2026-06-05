@@ -99,6 +99,12 @@ final class ScannerService {
 
         let recursive = includeSubfolders
         scanTask = Task { [weak self] in
+            // Hold a security-scoped grant on each top-level (user-selected) URL
+            // for the WHOLE scan — collection AND duration reads of children
+            // both require the parent's access to stay open under App Sandbox.
+            let scoped = urls.filter { $0.startAccessingSecurityScopedResource() }
+            defer { scoped.forEach { $0.stopAccessingSecurityScopedResource() } }
+
             // Collect all file URLs off the main actor.
             let fileURLs = await Task.detached(priority: .userInitiated) {
                 collectFiles(from: urls, recursive: recursive)
@@ -169,17 +175,13 @@ final class ScannerService {
 
 /// Expands a mix of file and directory URLs into a flat list of regular-file URLs.
 ///
-/// Each top-level URL is wrapped in a security-scoped resource access for the
-/// duration of the walk so the App Sandbox grants read access to items reached
-/// via a user-selected folder or drop.
+/// Callers are responsible for holding any required security-scoped access on
+/// the top-level `urls` for the lifetime of the scan (see `ScannerService.scan`).
 func collectFiles(from urls: [URL], recursive: Bool) -> [URL] {
     let fm = FileManager.default
     var result: [URL] = []
 
     for url in urls {
-        let scoped = url.startAccessingSecurityScopedResource()
-        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-
         let values = try? url.resourceValues(forKeys: [.isDirectoryKey])
         if values?.isDirectory == true {
             result.append(contentsOf: collectFiles(in: url, recursive: recursive, fm: fm))
