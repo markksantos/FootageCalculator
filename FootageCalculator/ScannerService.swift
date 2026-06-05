@@ -13,7 +13,7 @@ enum FileCategory: String, CaseIterable {
     case video, audio, image, other
 }
 
-struct ScanResults {
+struct ScanResults: Equatable {
     var videoDuration: TimeInterval = 0
     var audioDuration: TimeInterval = 0
     var videoCount: Int = 0
@@ -22,6 +22,24 @@ struct ScanResults {
     var otherCount: Int = 0
     var videoUnknown: Int = 0
     var audioUnknown: Int = 0
+
+    var totalFiles: Int { videoCount + audioCount + imageCount + otherCount }
+    var totalDuration: TimeInterval { videoDuration + audioDuration }
+
+    /// A plain-text summary suitable for copying to the clipboard or saving.
+    var plainTextSummary: String {
+        var lines: [String] = ["Footage Calculator — Scan Summary", ""]
+        lines.append("Total duration: \(formatDuration(totalDuration))")
+        lines.append("Total files:    \(totalFiles)")
+        lines.append("")
+        lines.append("Video:  \(videoCount) file\(videoCount == 1 ? "" : "s") — \(formatDuration(videoDuration))"
+            + (videoUnknown > 0 ? " (\(videoUnknown) unknown)" : ""))
+        lines.append("Audio:  \(audioCount) file\(audioCount == 1 ? "" : "s") — \(formatDuration(audioDuration))"
+            + (audioUnknown > 0 ? " (\(audioUnknown) unknown)" : ""))
+        lines.append("Images: \(imageCount) file\(imageCount == 1 ? "" : "s")")
+        lines.append("Other:  \(otherCount) file\(otherCount == 1 ? "" : "s")")
+        return lines.joined(separator: "\n")
+    }
 }
 
 // MARK: - File Classification
@@ -65,6 +83,7 @@ func formatDuration(_ seconds: TimeInterval) -> String {
 
 // MARK: - Scanner Service
 
+@MainActor
 @Observable
 final class ScannerService {
     var state: ScanState = .idle
@@ -78,28 +97,22 @@ final class ScannerService {
         state = .scanning(scanned: 0, total: 0)
         results = ScanResults()
 
-        scanTask = Task { [includeSubfolders] in
-            // Collect all file URLs
-            var fileURLs: [URL] = []
-            for url in urls {
-                var isDir: ObjCBool = false
-                FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
-                if isDir.boolValue {
-                    fileURLs.append(contentsOf: collectFiles(in: url, recursive: includeSubfolders))
-                } else {
-                    fileURLs.append(url)
-                }
-            }
+        let recursive = includeSubfolders
+        scanTask = Task { [weak self] in
+            // Collect all file URLs off the main actor.
+            let fileURLs = await Task.detached(priority: .userInitiated) {
+                collectFiles(from: urls, recursive: recursive)
+            }.value
+
+            guard let self, !Task.isCancelled else { return }
 
             let total = fileURLs.count
             if total == 0 {
-                await MainActor.run { self.state = .results }
+                self.state = .results
                 return
             }
 
-            await MainActor.run {
-                self.state = .scanning(scanned: 0, total: total)
-            }
+            self.state = .scanning(scanned: 0, total: total)
 
             var localResults = ScanResults()
 
@@ -129,20 +142,14 @@ final class ScannerService {
                 }
 
                 if index % 5 == 0 || index == total - 1 {
-                    let scanned = index + 1
-                    let snapshot = localResults
-                    await MainActor.run {
-                        self.results = snapshot
-                        self.state = .scanning(scanned: scanned, total: total)
-                    }
+                    self.results = localResults
+                    self.state = .scanning(scanned: index + 1, total: total)
                 }
             }
 
-            let finalResults = localResults
-            await MainActor.run {
-                self.results = finalResults
-                self.state = .results
-            }
+            if Task.isCancelled { return }
+            self.results = localResults
+            self.state = .results
         }
     }
 
@@ -160,30 +167,44 @@ final class ScannerService {
 
 // MARK: - File Collection
 
-private func collectFiles(in directory: URL, recursive: Bool) -> [URL] {
+/// Expands a mix of file and directory URLs into a flat list of regular-file URLs.
+///
+/// Each top-level URL is wrapped in a security-scoped resource access for the
+/// duration of the walk so the App Sandbox grants read access to items reached
+/// via a user-selected folder or drop.
+func collectFiles(from urls: [URL], recursive: Bool) -> [URL] {
     let fm = FileManager.default
+    var result: [URL] = []
+
+    for url in urls {
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+
+        let values = try? url.resourceValues(forKeys: [.isDirectoryKey])
+        if values?.isDirectory == true {
+            result.append(contentsOf: collectFiles(in: url, recursive: recursive, fm: fm))
+        } else if fm.fileExists(atPath: url.path) {
+            result.append(url)
+        }
+    }
+
+    return result
+}
+
+private func collectFiles(in directory: URL, recursive: Bool, fm: FileManager) -> [URL] {
     var result: [URL] = []
 
     guard let enumerator = fm.enumerator(
         at: directory,
         includingPropertiesForKeys: [.isRegularFileKey, .isDirectoryKey],
-        options: [.skipsHiddenFiles]
+        options: recursive ? [.skipsHiddenFiles] : [.skipsHiddenFiles, .skipsSubdirectoryDescendants]
     ) else {
         return result
     }
 
     for case let fileURL as URL in enumerator {
-        if !recursive {
-            // Only include items at the top level
-            if fileURL.deletingLastPathComponent().path != directory.path {
-                enumerator.skipDescendants()
-                continue
-            }
-        }
-
-        var isDir: ObjCBool = false
-        fm.fileExists(atPath: fileURL.path, isDirectory: &isDir)
-        if !isDir.boolValue {
+        let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey])
+        if values?.isRegularFile == true {
             result.append(fileURL)
         }
     }
@@ -193,12 +214,19 @@ private func collectFiles(in directory: URL, recursive: Bool) -> [URL] {
 
 // MARK: - AVFoundation Duration
 
-private func getDuration(for url: URL) -> TimeInterval? {
+/// Loads a media asset's duration in seconds, or `nil` if it can't be read.
+///
+/// Uses the modern async `load(.isPlayable)` / `load(.duration)` API
+/// (`AVAsset.duration` is deprecated since macOS 13) so the call genuinely
+/// suspends instead of blocking, and unreadable/corrupt files fail gracefully.
+private func getDuration(for url: URL) async -> TimeInterval? {
     let asset = AVURLAsset(url: url)
-    let duration = asset.duration
-    if duration == .invalid || duration == .zero || duration == .indefinite {
+    do {
+        let (isPlayable, duration) = try await asset.load(.isPlayable, .duration)
+        guard isPlayable else { return nil }
+        let seconds = CMTimeGetSeconds(duration)
+        return seconds.isFinite && seconds > 0 ? seconds : nil
+    } catch {
         return nil
     }
-    let seconds = CMTimeGetSeconds(duration)
-    return seconds.isFinite && seconds > 0 ? seconds : nil
 }

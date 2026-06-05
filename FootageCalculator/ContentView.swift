@@ -1,9 +1,11 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import AppKit
 
 struct ContentView: View {
     @State private var scanner = ScannerService()
     @State private var isTargeted = false
+    @State private var didCopy = false
 
     var body: some View {
         ZStack {
@@ -112,7 +114,7 @@ struct ContentView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     let r = scanner.results
-                    let totalFiles = r.videoCount + r.audioCount + r.imageCount + r.otherCount
+                    let totalFiles = r.totalFiles
 
                     if totalFiles == 0 {
                         Text("No files found.")
@@ -120,6 +122,8 @@ struct ContentView: View {
                             .foregroundStyle(.secondary)
                             .padding(.top, 40)
                     } else {
+                        totalDurationHeader(r.totalDuration)
+
                         categoryCard(
                             icon: "film",
                             title: "Video",
@@ -162,22 +166,58 @@ struct ContentView: View {
 
             Divider()
 
-            HStack {
+            HStack(spacing: 10) {
                 Text("Drop another folder to scan again")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
 
                 Spacer()
 
+                if scanner.results.totalFiles > 0 {
+                    Button {
+                        copySummary()
+                    } label: {
+                        Label(didCopy ? "Copied" : "Copy", systemImage: didCopy ? "checkmark" : "doc.on.doc")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.regular)
+                    .help("Copy the scan summary to the clipboard")
+
+                    Button {
+                        saveSummary()
+                    } label: {
+                        Label("Save…", systemImage: "square.and.arrow.down")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.regular)
+                    .help("Save the scan summary as a text file")
+                }
+
                 Button("Scan Another") {
                     scanner.reset()
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.borderedProminent)
                 .controlSize(.regular)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
         }
+    }
+
+    // MARK: - Total Duration Header
+
+    private func totalDurationHeader(_ total: TimeInterval) -> some View {
+        VStack(spacing: 2) {
+            Text(formatDuration(total))
+                .font(.system(size: 40, weight: .semibold, design: .rounded).monospacedDigit())
+                .foregroundStyle(.primary)
+            Text("Total Duration")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
     }
 
     // MARK: - Category Card
@@ -244,23 +284,47 @@ struct ContentView: View {
         scanner.scan(urls: panel.urls)
     }
 
-    private func handleDrop(_ providers: [NSItemProvider]) {
-        var urls: [URL] = []
-        let group = DispatchGroup()
+    private func copySummary() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(scanner.results.plainTextSummary, forType: .string)
 
-        for provider in providers {
+        didCopy = true
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            didCopy = false
+        }
+    }
+
+    private func saveSummary() {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.plainText]
+        panel.nameFieldStringValue = "Footage Summary.txt"
+        panel.message = "Save the scan summary"
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        try? scanner.results.plainTextSummary.write(to: url, atomically: true, encoding: .utf8)
+    }
+
+    private func handleDrop(_ providers: [NSItemProvider]) {
+        let group = DispatchGroup()
+        // Index-keyed to preserve drop order regardless of completion order.
+        var indexedURLs: [Int: URL] = [:]
+        let lock = NSLock()
+
+        for (index, provider) in providers.enumerated() {
             group.enter()
-            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { data, _ in
+            _ = provider.loadObject(ofClass: URL.self) { url, _ in
                 defer { group.leave() }
-                guard let data = data as? Data,
-                      let path = String(data: data, encoding: .utf8),
-                      let url = URL(string: path)
-                else { return }
-                urls.append(url)
+                guard let url, url.isFileURL else { return }
+                lock.lock()
+                indexedURLs[index] = url
+                lock.unlock()
             }
         }
 
         group.notify(queue: .main) {
+            let urls = indexedURLs.sorted { $0.key < $1.key }.map(\.value)
             if !urls.isEmpty {
                 scanner.scan(urls: urls)
             }

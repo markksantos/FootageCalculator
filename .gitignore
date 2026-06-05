@@ -2,6 +2,7 @@
 __pycache__/
 xcuserdata/
 DerivedData/
+build/
 *.xcodeproj/project.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
 
@@ -10,3 +11,16 @@ DerivedData/
 .env
 .env.local
 .env.*.local
+# Build / test artifacts
+*.xcresult
+*.dmg
+
+# macOS distribution / signing material (never commit)
+*.p12
+*.cer
+*.provisionprofile
+ExportOptions.private.plist
+
+# Environment variables
+.env.production
+.env.development

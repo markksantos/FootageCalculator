@@ -11,7 +11,18 @@
 		A10000010000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000002 /* ContentView.swift */; };
 		A10000010000000000000003 /* ScannerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000003 /* ScannerService.swift */; };
 		A10000010000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000004 /* Assets.xcassets */; };
+		A10000010000000000000010 /* ScannerServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000010 /* ScannerServiceTests.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A1000000000000000000000C0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000080000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A10000050000000000000001;
+			remoteInfo = FootageCalculator;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		A10000020000000000000001 /* FootageCalculatorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FootageCalculatorApp.swift; sourceTree = "<group>"; };
@@ -20,10 +31,19 @@
 		A10000020000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A10000020000000000000005 /* FootageCalculator.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FootageCalculator.entitlements; sourceTree = "<group>"; };
 		A10000020000000000000006 /* FootageCalculator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FootageCalculator.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000020000000000000010 /* ScannerServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerServiceTests.swift; sourceTree = "<group>"; };
+		A10000020000000000000011 /* FootageCalculatorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FootageCalculatorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A10000030000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000030000000000000002 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -37,6 +57,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000040000000000000002 /* FootageCalculator */,
+				A10000040000000000000004 /* FootageCalculatorTests */,
 				A10000040000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -53,10 +74,19 @@
 			path = FootageCalculator;
 			sourceTree = "<group>";
 		};
+		A10000040000000000000004 /* FootageCalculatorTests */ = {
+			isa = PBXGroup;
+			children = (
+				A10000020000000000000010 /* ScannerServiceTests.swift */,
+			);
+			path = FootageCalculatorTests;
+			sourceTree = "<group>";
+		};
 		A10000040000000000000003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				A10000020000000000000006 /* FootageCalculator.app */,
+				A10000020000000000000011 /* FootageCalculatorTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -81,6 +111,23 @@
 			productReference = A10000020000000000000006 /* FootageCalculator.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A10000050000000000000002 /* FootageCalculatorTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000070000000000000003 /* Build configuration list for PBXNativeTarget "FootageCalculatorTests" */;
+			buildPhases = (
+				A10000060000000000000010 /* Sources */,
+				A10000030000000000000002 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A1000000000000000000000D0 /* PBXTargetDependency */,
+			);
+			name = FootageCalculatorTests;
+			productName = FootageCalculatorTests;
+			productReference = A10000020000000000000011 /* FootageCalculatorTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -93,6 +140,10 @@
 				TargetAttributes = {
 					A10000050000000000000001 = {
 						CreatedOnToolsVersion = 15.0;
+					};
+					A10000050000000000000002 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = A10000050000000000000001;
 					};
 				};
 			};
@@ -110,6 +161,7 @@
 			projectRoot = "";
 			targets = (
 				A10000050000000000000001 /* FootageCalculator */,
+				A10000050000000000000002 /* FootageCalculatorTests */,
 			);
 		};
 /* End PBXProject section */
@@ -136,7 +188,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A10000060000000000000010 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000010000000000000010 /* ScannerServiceTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A1000000000000000000000D0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A10000050000000000000001 /* FootageCalculator */;
+			targetProxy = A1000000000000000000000C0 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A10000090000000000000001 /* Debug */ = {
@@ -268,7 +336,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 Mark Santos. MIT License.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -294,7 +362,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 Mark Santos. MIT License.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -304,6 +372,42 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		A10000090000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.footagecalculator.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FootageCalculator.app/Contents/MacOS/FootageCalculator";
+			};
+			name = Debug;
+		};
+		A10000090000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.footagecalculator.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FootageCalculator.app/Contents/MacOS/FootageCalculator";
 			};
 			name = Release;
 		};
@@ -324,6 +428,15 @@
 			buildConfigurations = (
 				A10000090000000000000001 /* Debug */,
 				A10000090000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A10000070000000000000003 /* Build configuration list for PBXNativeTarget "FootageCalculatorTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000090000000000000005 /* Debug */,
+				A10000090000000000000006 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
